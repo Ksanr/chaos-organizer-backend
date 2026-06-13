@@ -3,8 +3,6 @@ name: Deploy Backend
 on:
   push:
     branches: [ "main" ]
-    paths:
-      - 'backend/**'  # Запускать только при изменениях в папке backend
 
 jobs:
   deploy:
