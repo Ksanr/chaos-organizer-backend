@@ -173,7 +173,7 @@ router.post('/messages/file', upload.single('file'), (ctx) => {
   messages.push(message);
   ctx.body = message;
 });
-*/
+
 
 app.use(router.routes()).use(router.allowedMethods());
 
