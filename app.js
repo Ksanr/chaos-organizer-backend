@@ -23,6 +23,30 @@ const upload = multer({ storage });
 
 // Хранилище сообщений в памяти
 const messages = [];
+const demoMessages = [
+  {
+    id: uuidv4(),
+    type: 'text',
+    text: '🎉 Добро пожаловать в Chaos Organizer! Это демо-сообщение.',
+    timestamp: Date.now() - 86400000, // сутки назад
+    pinned: false,
+  },
+  {
+    id: uuidv4(),
+    type: 'text',
+    text: 'Вы можете отправлять ссылки: https://github.com/Ksanr/chaos-organizer',
+    timestamp: Date.now() - 7200000,
+    pinned: false,
+  },
+  {
+    id: uuidv4(),
+    type: 'text',
+    text: 'Попробуйте прикрепить изображение, видео или аудио через кнопку 📎 или перетаскиванием в чат.',
+    timestamp: Date.now() - 3600000,
+    pinned: false,
+  },
+];
+messages.push(...demoMessages);
 const PAGE_SIZE = 10;
 
 // Middleware
