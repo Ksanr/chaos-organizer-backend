@@ -2,33 +2,28 @@ const Koa = require('koa');
 const Router = require('@koa/router');
 const cors = require('@koa/cors');
 const bodyParser = require('koa-bodyparser');
-const serve = require('koa-static');
 const logger = require('koa-logger');
-const path = require('path');
 const { v4: uuidv4 } = require('uuid');
-const multer = require('@koa/multer');
+
+// multer и serve закомментированы, так как загрузка файлов отключена на сервере
+// const multer = require('@koa/multer');
+// const serve = require('koa-static');
+// const path = require('path');
 
 const app = new Koa();
 const router = new Router();
 
-// Настройка хранилища для файлов
-const storage = multer.diskStorage({
-  destination: './uploads/',
-  filename: (req, file, cb) => {
-    const unique = uuidv4() + path.extname(file.originalname);
-    cb(null, unique);
-  },
-});
-const upload = multer({ storage });
-
 // Хранилище сообщений в памяти
 const messages = [];
+const PAGE_SIZE = 10;
+
+// Демо-сообщения
 const demoMessages = [
   {
     id: uuidv4(),
     type: 'text',
     text: '🎉 Добро пожаловать в Chaos Organizer! Это демо-сообщение.',
-    timestamp: Date.now() - 86400000, // сутки назад
+    timestamp: Date.now() - 86400000,
     pinned: false,
   },
   {
@@ -41,24 +36,22 @@ const demoMessages = [
   {
     id: uuidv4(),
     type: 'text',
-    text: 'Попробуйте прикрепить изображение, видео или аудио через кнопку 📎 или перетаскиванием в чат.',
+    text: 'Попробуйте закрепить сообщение (иконка 📌) или отправить геолокацию (📍).',
     timestamp: Date.now() - 3600000,
     pinned: false,
   },
 ];
 messages.push(...demoMessages);
-const PAGE_SIZE = 10;
 
 // Middleware
 app.use(logger());
 app.use(cors({ origin: '*' }));
 app.use(bodyParser());
-app.use(serve('./uploads')); // раздаём загруженные файлы
 
 // Префикс для всех API-роутов
 router.prefix('/api');
 
-// Роут для получения сообщений с пагинацией (ленивая подгрузка)
+// Роут для получения сообщений с пагинацией
 router.get('/messages', (ctx) => {
   const { page = 1 } = ctx.query;
   const pageNum = parseInt(page, 10);
@@ -74,9 +67,9 @@ router.get('/messages', (ctx) => {
   };
 });
 
-// Роут для создания текстового сообщения
+// Роут для создания текстового сообщения (поддерживает и геолокацию)
 router.post('/messages/text', (ctx) => {
-  const { text, pinned = false, geo = null, isCommand = false, commandAnswer = null } = ctx.request.body;
+  const { text, pinned = false, geo = null } = ctx.request.body;
   const message = {
     id: uuidv4(),
     type: 'text',
@@ -84,38 +77,12 @@ router.post('/messages/text', (ctx) => {
     timestamp: Date.now(),
     pinned,
     geo,
-    isCommand,
-    commandAnswer,
   };
   messages.push(message);
   ctx.body = message;
 });
 
-// Роут для загрузки файла (изображение, видео, аудио)
-/* закомментирую для очистки сервера */
-router.post('/messages/file', upload.single('file'), (ctx) => {
-  const { pinned = false, geo = null } = ctx.request.body;
-  const file = ctx.file;
-  const ext = path.extname(file.filename).toLowerCase();
-  let type = 'file';
-  if (['.jpg', '.jpeg', '.png', '.gif', '.webp'].includes(ext)) type = 'image';
-  else if (['.mp4', '.webm', '.ogg'].includes(ext)) type = 'video';
-  else if (['.mp3', '.wav', '.ogg'].includes(ext)) type = 'audio';
-
-  const message = {
-    id: uuidv4(),
-    type,
-    fileUrl: `/${file.filename}`,
-    originalName: file.originalname,
-    timestamp: Date.now(),
-    pinned,
-    geo,
-  };
-  messages.push(message);
-  ctx.body = message;
-});
-
-// Роут для поиска сообщений (доп. функция)
+// Роут для поиска сообщений
 router.get('/messages/search', (ctx) => {
   const { q } = ctx.query;
   if (!q) {
@@ -125,17 +92,16 @@ router.get('/messages/search', (ctx) => {
   const lowerQ = q.toLowerCase();
   const results = messages.filter(msg => {
     if (msg.type === 'text') return msg.text.toLowerCase().includes(lowerQ);
-    if (msg.type !== 'text' && msg.originalName) return msg.originalName.toLowerCase().includes(lowerQ);
+    // Для файлов поиск по originalName — но файлы отключены, поэтому только текст
     return false;
   });
-  results.sort((a, b) => a.timestamp - b.timestamp);
-  ctx.body = results.slice(-50); // последние 50 результатов
+  results.sort((a, b) => b.timestamp - a.timestamp);
+  ctx.body = results.slice(-50);
 });
 
 // Роут для закрепления сообщения (только одно)
 router.post('/messages/pin/:id', (ctx) => {
   const { id } = ctx.params;
-  // Сначала снимаем закрепление со всех
   messages.forEach(msg => { msg.pinned = false; });
   const msg = messages.find(m => m.id === id);
   if (msg) {
@@ -158,6 +124,35 @@ router.get('/messages/pinned', (ctx) => {
   const pinned = messages.find(m => m.pinned === true);
   ctx.body = pinned || null;
 });
+
+/* =================================================================
+   Роут для загрузки файлов (изображения, видео, аудио)
+   ЗАКОММЕНТИРОВАН, так как на бесплатном тарифе Pxxl возникает
+   ошибка Disk quota exceeded. При локальном запуске
+   эта функция полностью работоспособна.
+   =================================================================
+router.post('/messages/file', upload.single('file'), (ctx) => {
+  const { pinned = false, geo = null } = ctx.request.body;
+  const file = ctx.file;
+  const ext = path.extname(file.filename).toLowerCase();
+  let type = 'file';
+  if (['.jpg', '.jpeg', '.png', '.gif', '.webp'].includes(ext)) type = 'image';
+  else if (['.mp4', '.webm', '.ogg'].includes(ext)) type = 'video';
+  else if (['.mp3', '.wav', '.ogg'].includes(ext)) type = 'audio';
+
+  const message = {
+    id: uuidv4(),
+    type,
+    fileUrl: `/${file.filename}`,
+    originalName: file.originalname,
+    timestamp: Date.now(),
+    pinned,
+    geo,
+  };
+  messages.push(message);
+  ctx.body = message;
+});
+*/
 
 app.use(router.routes()).use(router.allowedMethods());
 
