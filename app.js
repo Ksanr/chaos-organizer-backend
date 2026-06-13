@@ -3,17 +3,29 @@ const Router = require('@koa/router');
 const cors = require('@koa/cors');
 const bodyParser = require('koa-bodyparser');
 const logger = require('koa-logger');
+const serve = require('koa-static');
+const path = require('path');
+const fs = require('fs');
 const { v4: uuidv4 } = require('uuid');
-
-// multer и serve закомментированы, так как загрузка файлов отключена на сервере
-// const multer = require('@koa/multer');
-// const serve = require('koa-static');
-// const path = require('path');
+const multer = require('@koa/multer');
 
 const app = new Koa();
 const router = new Router();
 
-// Хранилище сообщений в памяти
+// ========== НАСТРОЙКА ЗАГРУЗКИ ФАЙЛОВ ==========
+const storage = multer.diskStorage({
+  destination: './uploads/',
+  filename: (req, file, cb) => {
+    const unique = uuidv4() + path.extname(file.originalname);
+    cb(null, unique);
+  },
+});
+const upload = multer({
+  storage,
+  limits: { fileSize: 5 * 1024 * 1024 }, // 5 MB лимит на один файл
+});
+
+// ========== ХРАНИЛИЩЕ СООБЩЕНИЙ ==========
 const messages = [];
 const PAGE_SIZE = 10;
 
@@ -29,14 +41,37 @@ const demoMessages = [
 ];
 messages.push(...demoMessages);
 
-// Middleware
+// ========== АВТОМАТИЧЕСКАЯ ОЧИСТКА СТАРЫХ ФАЙЛОВ ==========
+const MAX_FILES_IN_UPLOADS = 5; // храним не более 5 файлов
+function cleanOldFiles() {
+  const uploadsDir = './uploads';
+  if (!fs.existsSync(uploadsDir)) return;
+  let files = fs.readdirSync(uploadsDir).map(file => ({
+    name: file,
+    path: path.join(uploadsDir, file),
+    birthtime: fs.statSync(path.join(uploadsDir, file)).birthtime,
+  }));
+  files.sort((a, b) => a.birthtime - b.birthtime);
+  while (files.length > MAX_FILES_IN_UPLOADS) {
+    const oldest = files.shift();
+    fs.unlinkSync(oldest.path);
+    console.log(`Deleted old file: ${oldest.name}`);
+  }
+}
+
+// Вызываем очистку при старте сервера (на случай, если остались лишние файлы)
+cleanOldFiles();
+
+// ========== MIDDLEWARE ==========
 app.use(logger());
 app.use(cors({ origin: '*' }));
 app.use(bodyParser());
+app.use(serve('./uploads')); // раздаём загруженные файлы
 
 // Префикс для всех API-роутов
 router.prefix('/api');
 
+// ========== РОУТЫ ==========
 // Роут для получения сообщений с пагинацией
 router.get('/messages', (ctx) => {
   const { page = 1 } = ctx.query;
@@ -78,7 +113,7 @@ router.get('/messages/search', (ctx) => {
   const lowerQ = q.toLowerCase();
   const results = messages.filter(msg => {
     if (msg.type === 'text') return msg.text.toLowerCase().includes(lowerQ);
-    // Для файлов поиск по originalName — но файлы отключены, поэтому только текст
+    if (msg.originalName) return msg.originalName.toLowerCase().includes(lowerQ);
     return false;
   });
   results.sort((a, b) => b.timestamp - a.timestamp);
@@ -111,15 +146,15 @@ router.get('/messages/pinned', (ctx) => {
   ctx.body = pinned || null;
 });
 
-/* =================================================================
-   Роут для загрузки файлов (изображения, видео, аудио)
-   ЗАКОММЕНТИРОВАН, так как на бесплатном тарифе Pxxl возникает
-   ошибка Disk quota exceeded. При локальном запуске
-   эта функция полностью работоспособна.
-   =================================================================
+// Роут для загрузки файлов (изображения, видео, аудио)
 router.post('/messages/file', upload.single('file'), (ctx) => {
   const { pinned = false, geo = null } = ctx.request.body;
   const file = ctx.file;
+  if (!file) {
+    ctx.status = 400;
+    ctx.body = { error: 'No file uploaded' };
+    return;
+  }
   const ext = path.extname(file.filename).toLowerCase();
   let type = 'file';
   if (['.jpg', '.jpeg', '.png', '.gif', '.webp'].includes(ext)) type = 'image';

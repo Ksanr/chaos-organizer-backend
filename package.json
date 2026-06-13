@@ -1,8 +1,8 @@
 {
-  "name": "backend",
+  "name": "chaos-organizer-backend",
   "version": "1.0.0",
-  "description": "",
-  "main": "index.js",
+  "description": "Backend for Chaos Organizer (Koa, REST API)",
+  "main": "app.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "dev": "nodemon app.js",
@@ -15,10 +15,12 @@
   "type": "commonjs",
   "dependencies": {
     "@koa/cors": "^5.0.0",
+    "@koa/multer": "^4.0.0",
     "@koa/router": "^15.6.0",
     "koa": "^3.2.1",
     "koa-bodyparser": "^4.4.1",
     "koa-logger": "^4.0.0",
+    "koa-static": "^5.0.0",
     "uuid": "^9.0.1"
   },
   "devDependencies": {
