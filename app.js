@@ -92,6 +92,7 @@ router.post('/messages/text', (ctx) => {
 });
 
 // Роут для загрузки файла (изображение, видео, аудио)
+/* закомментирую для очистки сервера
 router.post('/messages/file', upload.single('file'), (ctx) => {
   const { pinned = false, geo = null } = ctx.request.body;
   const file = ctx.file;
@@ -113,7 +114,7 @@ router.post('/messages/file', upload.single('file'), (ctx) => {
   messages.push(message);
   ctx.body = message;
 });
-
+*/
 // Роут для поиска сообщений (доп. функция)
 router.get('/messages/search', (ctx) => {
   const { q } = ctx.query;
