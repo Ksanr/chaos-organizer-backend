@@ -31,13 +31,21 @@ const PAGE_SIZE = 10;
 
 // Демо-сообщения
 const demoMessages = [
-  {
-    id: uuidv4(),
-    type: 'text',
-    text: '🎉 Добро пожаловать в Chaos Organizer! Это демо-сообщение.',
-    timestamp: Date.now() - 86400000,
-    pinned: false,
-  },
+  { id: uuidv4(), type: 'text', text: '🎉 Добро пожаловать в Chaos Organizer!', timestamp: Date.now() - 86400000, pinned: false },
+  { id: uuidv4(), type: 'text', text: 'Сообщение #2', timestamp: Date.now() - 85000000, pinned: false },
+  { id: uuidv4(), type: 'text', text: 'Сообщение #3', timestamp: Date.now() - 84000000, pinned: false },
+  { id: uuidv4(), type: 'text', text: 'Сообщение #4', timestamp: Date.now() - 83000000, pinned: false },
+  { id: uuidv4(), type: 'text', text: 'Сообщение #5', timestamp: Date.now() - 82000000, pinned: false },
+  { id: uuidv4(), type: 'text', text: 'Сообщение #6', timestamp: Date.now() - 81000000, pinned: false },
+  { id: uuidv4(), type: 'text', text: 'Сообщение #7', timestamp: Date.now() - 80000000, pinned: false },
+  { id: uuidv4(), type: 'text', text: 'Сообщение #8', timestamp: Date.now() - 79000000, pinned: false },
+  { id: uuidv4(), type: 'text', text: 'Сообщение #9', timestamp: Date.now() - 78000000, pinned: false },
+  { id: uuidv4(), type: 'text', text: 'Сообщение #10', timestamp: Date.now() - 77000000, pinned: false },
+  { id: uuidv4(), type: 'text', text: 'Сообщение #11', timestamp: Date.now() - 76000000, pinned: false },
+  { id: uuidv4(), type: 'text', text: 'Сообщение #12', timestamp: Date.now() - 75000000, pinned: false },
+  { id: uuidv4(), type: 'text', text: '🔗 Ссылка: https://github.com/Ksanr/chaos-organizer', timestamp: Date.now() - 7200000, pinned: false },
+  { id: uuidv4(), type: 'text', text: '📌 Закрепите это сообщение', timestamp: Date.now() - 3600000, pinned: false },
+  { id: uuidv4(), type: 'text', text: '📍 Отправьте геолокацию кнопкой ниже', timestamp: Date.now() - 1800000, pinned: false },
 ];
 messages.push(...demoMessages);
 
