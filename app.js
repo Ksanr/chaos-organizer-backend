@@ -147,6 +147,7 @@ router.get('/messages/pinned', (ctx) => {
 });
 
 // Роут для загрузки файлов (изображения, видео, аудио)
+/*
 router.post('/messages/file', upload.single('file'), (ctx) => {
   const { pinned = false, geo = null } = ctx.request.body;
   const file = ctx.file;
@@ -173,7 +174,7 @@ router.post('/messages/file', upload.single('file'), (ctx) => {
   messages.push(message);
   ctx.body = message;
 });
-
+*/
 
 app.use(router.routes()).use(router.allowedMethods());
 
