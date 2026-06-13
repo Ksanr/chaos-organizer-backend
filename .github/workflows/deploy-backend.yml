@@ -17,10 +17,8 @@ jobs:
 
       - name: Install dependencies
         run: |
-          cd backend
           npm install
 
       - name: Start server
         run: |
-          cd backend
           npm start &  # Запускаем сервер в фоновом режиме
