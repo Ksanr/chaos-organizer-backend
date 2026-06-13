@@ -68,7 +68,11 @@ app.use(cors({ origin: '*' }));
 app.use(bodyParser());
 app.use(serve('./uploads')); // раздаём загруженные файлы
 
-// Префикс для всех API-роутов
+// Обработчик для корневого пути, который всегда отвечает, что всё в порядке.
+router.get('/', (ctx) => {
+  ctx.status = 200;
+  ctx.body = 'OK';
+});// Префикс для всех API-роутов
 router.prefix('/api');
 
 // ========== РОУТЫ ==========
@@ -179,6 +183,6 @@ router.post('/messages/file', upload.single('file'), (ctx) => {
 app.use(router.routes()).use(router.allowedMethods());
 
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => {
+app.listen(PORT, '0.0.0.0', () => {
   console.log(`Server running on port ${PORT}`);
 });
