@@ -26,20 +26,6 @@ const demoMessages = [
     timestamp: Date.now() - 86400000,
     pinned: false,
   },
-  {
-    id: uuidv4(),
-    type: 'text',
-    text: 'Вы можете отправлять ссылки: https://github.com/Ksanr/chaos-organizer',
-    timestamp: Date.now() - 7200000,
-    pinned: false,
-  },
-  {
-    id: uuidv4(),
-    type: 'text',
-    text: 'Попробуйте закрепить сообщение (иконка 📌) или отправить геолокацию (📍).',
-    timestamp: Date.now() - 3600000,
-    pinned: false,
-  },
 ];
 messages.push(...demoMessages);
 
